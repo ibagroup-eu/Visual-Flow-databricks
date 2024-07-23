@@ -1,0 +1,61 @@
+server:
+  port: 8080
+  tomcat:
+    accesslog:
+      enabled: true
+  servlet:
+    context-path: /vf
+  error:
+    include-message: always
+    include-binding-errors: always
+  ssl:
+    key-store: ./tmp/vf-cert.p12
+    key-store-password: password
+    key-store-type: pkcs12
+    key-alias: vf-api
+    key-password: password
+
+oauth:
+  url:
+    userInfo: https://path/user
+
+auth:
+  #  email: email
+  #  id: sub
+  #  name: name
+  #  username: preferred_username
+  id: id
+  username: login
+  name: name
+  email: email
+
+namespace:
+  app: vf-dev-test
+  label: vf-dev-test
+  prefix: ${namespace.app}-
+
+superusers:
+  set:
+    - Username
+
+databricks:
+  transformations:
+    path: path
+  isv:
+    name: visual-flow-test
+    version: 0.1
+  retry:
+    codes: 429, 500, 503
+
+scheduler:
+  interval: 5000
+
+jobStorage:
+  host: https://localhost:8080
+
+historyService:
+  host: https://localhost:9990
+
+jarFilePath: C:\Users\VKaptur\Downloads\spark-transformations-0.1-jar-with-dependencies.jar
+
+jarHash: C:\Users\VKaptur\Downloads\spark-transformations-0.1-jar-with-dependencies.jar.md5

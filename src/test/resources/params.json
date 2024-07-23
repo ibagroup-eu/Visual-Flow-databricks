@@ -1,0 +1,9 @@
+{
+  "key":"param1",
+  "secret":false,
+  "value":{
+    "text":"param1Value",
+    "conUsages":[],
+    "jobUsages":[],
+    "pipUsages":[]}
+}
