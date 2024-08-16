@@ -53,6 +53,8 @@ public class ApplicationConfigurationProperties {
     private String jarFilePath;
     @Valid
     private String jarHash;
+    @Valid
+    private DBServiceSettings dbService;
 
     /**
      * Represents oauth and user management settings.
@@ -114,8 +116,8 @@ public class ApplicationConfigurationProperties {
     @Data
     public static class DatabricksRetrySettings {
         private List<Integer> codes;
-        private Integer interval;
-        private Integer attempts;
+        private String intervals;
+        private String upTo;
     }
 
     /**
@@ -140,6 +142,14 @@ public class ApplicationConfigurationProperties {
     @Data
     public static class Scheduler {
         private String interval;
+    }
+
+    /**
+     * Represents Databases connection settings.
+     */
+    @Data
+    public static class DBServiceSettings {
+        private String host;
     }
 
 }

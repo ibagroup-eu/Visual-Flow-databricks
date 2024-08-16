@@ -38,7 +38,7 @@ class HistoryServiceTest {
     @Mock
     private PipelineService pipelineService;
     @Mock
-    private DatabricksJobService databricksJobService;
+    private DatabricksAPIService databricksAPIService;
     @InjectMocks
     private HistoryService historyService;
 
@@ -62,7 +62,7 @@ class HistoryServiceTest {
 
         Path file = Path.of("", "src/test/resources").resolve("logs.json");
         String data = objectMapper.readValue(Files.readString(file), JsonNode.class).get("data").asText();
-        when(databricksJobService.getClusterInfo("projectId", 123L))
+        when(databricksAPIService.getClusterInfo("projectId", 123L))
                 .thenReturn(DatabricksJobClusterDto.builder()
                         .tasks(List.of(DatabricksJobClusterDto.Task.builder()
                                 .jobName("jobName")
@@ -73,7 +73,7 @@ class HistoryServiceTest {
                                 .build()))
                         .build());
 
-        when(databricksJobService.getJobLogs("projectId", "clusterId"))
+        when(databricksAPIService.getJobLogs("projectId", "clusterId"))
                 .thenReturn(DatabricksJobLogDto.builder().data(data).build());
 
 

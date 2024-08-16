@@ -37,6 +37,7 @@ public final class Constants {
             "http[s]*\\:\\/\\/(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)" +
                     "*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])";
     public static final Pattern NON_WORD_PATTERN = Pattern.compile("[^A-Za-z0-9]+");
+    public static final Pattern PARAM_MATCH_PATTERN = Pattern.compile("#(.+?)#");
     public static final int MAX_DESCRIPTION_LENGTH = 500;
     public static final int MAX_TOKEN_LENGTH = 38;
     public static final String JOB_CONFIG_FIELD = "JOB_CONFIG";
@@ -50,6 +51,7 @@ public final class Constants {
     public static final String HASH = "hash";
     public static final String TOKEN = "token";
     public static final String PATH_TO_FILE = "pathToFile";
+    public static final String AUTHENTICATION_TYPE = "authType";
     public static final String CLOUD = "cloud";
     public static final String DESCRIPTION = "description";
     public static final String EXECUTOR_CORES = "EXECUTOR_CORES";
@@ -79,14 +81,15 @@ public final class Constants {
     public static final String DATABRICKS_JOBS_API = "api/2.1/jobs";
     public static final String DATABRICKS_JOBS_API_20 = "api/2.0";
     public static final String JOB_STORAGE_API = "api/project";
-    public static final String DATABRICKS_SECRET_SCOPE_API = "api/2.0/secrets/scopes";
+    public static final String DATABRICKS_CREATE_SECRET_SCOPE_API = "api/2.0/secrets/scopes/create";
+    public static final String DATABRICKS_DELETE_SECRET_SCOPE_API = "api/2.0/secrets/scopes/delete";
     public static final String DATABRICKS_SECRET_API = "api/2.0/secrets";
     public static final String HISTORY_SERVICE_API = "api/databricks";
     public static final String CONTEXT_PATH = "vf/be";
     public static final String CONTEXT_PATH_HISTORY = "vf/be/history";
     public static final String URL_STRING_FORMAT = "%s/%s/%s/%s/job/%s";
     public static final String URL_UPLOAD_FILE_FORMAT = "%s/api/2.0/fs/files%s/%s";
-    public static final String URL_CREATE_DIRECTORY_FORMAT = "%s/api/2.0/fs/directories%s";
+    public static final String URL_CREATE_DIRECTORY_FORMAT = "/api/2.0/fs/directories%s";
     public static final String JAR_FILE_NAME = "spark-transformations-0.1-jar-with-dependencies.jar";
     public static final String PROJECT_KEY_PREFIX = "projectParams:";
     public static final String PARAMETER_KEY_PREFIX = ":params:";
@@ -124,7 +127,10 @@ public final class Constants {
     public static final String CLUSTER_SCRIPTS = "CLUSTER_SCRIPTS";
     public static final String ZONES_FIELD = "zones";
     public static final String INSTANCE_PROFILES_FIELD = "instance_profiles";
-    public static final int CACHE_EXPIRE_MINUTES = 30;
+    public static final int JAR_FILE_CACHE_EXPIRE_MINUTES = 30;
+    public static final int TOKEN_CACHE_EXPIRE_MINUTES = 57;
     public static final Pattern LOG_PATTERN =
             Pattern.compile("^(\\d{2}/\\d{2}/\\d{2}\\s\\d{2}:\\d{2}:\\d{2})\\s(\\w+)\\s+(.+)$");
+    public static final String DATABRICKS_OAUTH_REQUEST_URL = "oidc/v1/token";
+    public static final String DATABRICKS_OAUTH_REQUEST_BODY = "grant_type=client_credentials&scope=all-apis";
 }

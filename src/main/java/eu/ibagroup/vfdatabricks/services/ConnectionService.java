@@ -40,6 +40,7 @@ import static eu.ibagroup.vfdatabricks.dto.Constants.JOB_STORAGE_API;
 @Service
 @Getter
 public class ConnectionService {
+    private static final String ENDPOINT_WITH_ID = "%s/%s/%s/%s/connections/%s";
     private final ApplicationConfigurationProperties appProperties;
     private final RestTemplate restTemplate;
 
@@ -74,9 +75,22 @@ public class ConnectionService {
                 ).getBody());
     }
 
+    public ConnectionDto get(String projectId, String connectionId) {
+        return Objects.requireNonNull(
+                restTemplate.getForEntity(
+                        String.format(ENDPOINT_WITH_ID,
+                                appProperties.getJobStorage().getHost(),
+                                CONTEXT_PATH,
+                                JOB_STORAGE_API,
+                                projectId,
+                                connectionId),
+                        ConnectionDto.class
+                ).getBody());
+    }
+
     public void update(final String projectId, final ConnectionDto connectionDto) {
         restTemplate.put(
-                String.format("%s/%s/%s/%s/connections/%s",
+                String.format(ENDPOINT_WITH_ID,
                         appProperties.getJobStorage().getHost(),
                         CONTEXT_PATH,
                         JOB_STORAGE_API,
@@ -89,7 +103,7 @@ public class ConnectionService {
 
     public void delete(final String projectId, final String connectionId) {
         restTemplate.delete(
-                String.format("%s/%s/%s/%s/connections/%s",
+                String.format(ENDPOINT_WITH_ID,
                         appProperties.getJobStorage().getHost(),
                         CONTEXT_PATH,
                         JOB_STORAGE_API,

@@ -42,7 +42,7 @@ class JobServiceTest {
     private static final String PROJECT_ID = "vf-project-name";
     private static final String JOB_ID = "test-job";
     @Mock
-    private DatabricksJobService databricksApiService;
+    private DatabricksAPIService databricksApiService;
     @Mock
     private MapperService mapperService;
     @Mock

@@ -34,7 +34,7 @@ import static eu.ibagroup.vfdatabricks.dto.Constants.*;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-public abstract class Params implements Serializable {
+public class Params implements Serializable {
     @Serial
     private static final long serialVersionUID = 1;
 

@@ -20,8 +20,6 @@
 package eu.ibagroup.vfdatabricks.services;
 
 import eu.ibagroup.vfdatabricks.config.ApplicationConfigurationProperties;
-import eu.ibagroup.vfdatabricks.dto.jobs.databricks.DataBricksSecretScopeDto;
-import eu.ibagroup.vfdatabricks.dto.jobs.databricks.DatabricksSecretScopeDeleteDto;
 import eu.ibagroup.vfdatabricks.dto.projects.ProjectOverviewDto;
 import eu.ibagroup.vfdatabricks.dto.projects.ProjectOverviewListDto;
 import eu.ibagroup.vfdatabricks.dto.projects.ProjectRequestDto;
@@ -29,11 +27,7 @@ import eu.ibagroup.vfdatabricks.dto.projects.ProjectResponseDto;
 import io.fabric8.kubernetes.api.model.Secret;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,8 +37,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static eu.ibagroup.vfdatabricks.dto.Constants.*;
-import static eu.ibagroup.vfdatabricks.services.UtilsService.decodeFromBase64;
-import static eu.ibagroup.vfdatabricks.services.UtilsService.makeHttpEntity;
 
 /**
  * ProjectService class.
@@ -54,20 +46,20 @@ import static eu.ibagroup.vfdatabricks.services.UtilsService.makeHttpEntity;
 public class ProjectService {
     private final ApplicationConfigurationProperties appProperties;
     private final KubernetesService kubernetesService;
-    private final RestTemplate databricksRestTemplate;
     private final AsyncDeleteProjectDataService asyncDeleteProjectDataService;
     private final AsyncUploadJarService asyncUploadJarService;
+    private final DatabricksAPIService databricksAPIService;
 
     public ProjectService(ApplicationConfigurationProperties appProperties,
                           KubernetesService kubernetesService,
-                          @Qualifier("databricksRestTemplate") RestTemplate databricksRestTemplate,
                           AsyncDeleteProjectDataService asyncDeleteProjectDataService,
-                          AsyncUploadJarService asyncUploadJarService) {
+                          AsyncUploadJarService asyncUploadJarService,
+                          DatabricksAPIService databricksAPIService) {
         this.appProperties = appProperties;
         this.kubernetesService = kubernetesService;
-        this.databricksRestTemplate = databricksRestTemplate;
         this.asyncDeleteProjectDataService = asyncDeleteProjectDataService;
         this.asyncUploadJarService = asyncUploadJarService;
+        this.databricksAPIService = databricksAPIService;
     }
 
     private String withNamespacePrefix(final String name) {
@@ -88,19 +80,7 @@ public class ProjectService {
         secret.getStringData().put(UPDATING, "true");
         kubernetesService.createSecret(id, secret);
         LOGGER.info("Project {} successfully created", id);
-        Secret project = kubernetesService.getSecret(id);
-        HttpEntity<DataBricksSecretScopeDto> databricksEntity = makeHttpEntity(
-                decodeFromBase64(project.getData().get(TOKEN)), DataBricksSecretScopeDto.builder()
-                        .scope(id)
-                        .scopeBackendType("DATABRICKS").build());
-        databricksRestTemplate.exchange(
-                String.format("%s/%s/create",
-                        decodeFromBase64(project.getData().get(HOST)),
-                        DATABRICKS_SECRET_SCOPE_API),
-                HttpMethod.POST,
-                databricksEntity,
-                Object.class
-        );
+        databricksAPIService.createSecretScope(id);
         asyncUploadJarService.uploadJarFileToDatabricks(id, projectDto.getPathToFile())
                 .whenComplete((Object object, Throwable exception) -> {
                     if (exception != null) {
@@ -125,27 +105,7 @@ public class ProjectService {
      */
     public ProjectResponseDto get(final String id) {
         Secret project = kubernetesService.getSecret(id);
-        String pathToFile = "";
-        if (project.getData().get(PATH_TO_FILE) != null) {
-            pathToFile = decodeFromBase64(project.getData().get(PATH_TO_FILE));
-        }
-        String cloud = "";
-        if (project.getData().get(CLOUD) != null) {
-            cloud = decodeFromBase64(project.getData().get(CLOUD));
-        }
-        return ProjectResponseDto.builder()
-                .id(project.getMetadata().getName())
-                .name(project.getMetadata().getAnnotations().get(NAME))
-                .description(project.getMetadata().getAnnotations().get(DESCRIPTION))
-                .host(decodeFromBase64(project.getData().get(HOST)))
-                .token(decodeFromBase64(project.getData().get(TOKEN)))
-                .pathToFile(pathToFile)
-                .cloud(cloud)
-                .editable(true)
-                .locked(false)
-                .demo(false)
-                .isUpdating(decodeFromBase64(project.getData().get(UPDATING)))
-                .build();
+        return ProjectResponseDto.fromSecret(project);
     }
 
     /**
@@ -158,30 +118,7 @@ public class ProjectService {
                 .projects(
                         kubernetesService.getSecretsByLabels(Map.of(TYPE, PROJECT))
                                 .stream()
-                                .map( (Secret project) -> {
-                                            String pathToFile = "";
-                                            if (project.getData().get(PATH_TO_FILE) != null) {
-                                                pathToFile = decodeFromBase64(project.getData().get(PATH_TO_FILE));
-                                            }
-                                            String cloud = "";
-                                            if (project.getData().get(CLOUD) != null) {
-                                                cloud = decodeFromBase64(project.getData().get(CLOUD));
-                                            }
-                                            return ProjectOverviewDto.builder()
-                                                    .id(project.getMetadata().getName())
-                                                    .name(project.getMetadata().getAnnotations().get(NAME))
-                                                    .description(project.getMetadata()
-                                                            .getAnnotations().get(DESCRIPTION))
-                                                    .pathToFile(pathToFile)
-                                                    .cloud(cloud)
-                                                    .isLocked(false)
-                                                    .host(decodeFromBase64(project.getData().get(HOST)))
-                                                    .jarHash(decodeFromBase64(project.getData().get(HASH)))
-                                                    .token(decodeFromBase64(project.getData().get(TOKEN)))
-                                                    .isUpdating(decodeFromBase64(project.getData().get(UPDATING)))
-                                                    .build();
-                                        }
-                                )
+                                .map(ProjectOverviewDto::fromSecret)
                                 .collect(Collectors.toList())
                 )
                 .editable(true)
@@ -208,20 +145,12 @@ public class ProjectService {
      * @param id project id.
      */
     public void delete(final String id) {
-        Secret project = kubernetesService.getSecret(id);
+        try {
+            databricksAPIService.deleteSecretScope(id);
+        } catch (RuntimeException e) {
+            LOGGER.info("Can't delete secret scope for {}", id, e);
+        }
         kubernetesService.deleteSecret(id);
         asyncDeleteProjectDataService.deleteProjectData(id);
-        HttpEntity<DatabricksSecretScopeDeleteDto> databricksEntity = makeHttpEntity(
-                decodeFromBase64(project.getData().get(TOKEN)),
-                DatabricksSecretScopeDeleteDto.builder().scope(id).build());
-        databricksRestTemplate.exchange(
-                String.format("%s/%s/delete",
-                        decodeFromBase64(project.getData().get(HOST)),
-                        DATABRICKS_SECRET_SCOPE_API),
-                HttpMethod.POST,
-                databricksEntity,
-                Object.class
-        );
-
     }
 }

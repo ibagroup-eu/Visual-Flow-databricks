@@ -46,6 +46,8 @@ databricks:
     version: 0.1
   retry:
     codes: 429, 500, 503
+    intervals: 1
+    upTo: 2
 
 scheduler:
   interval: 5000
@@ -55,6 +57,9 @@ jobStorage:
 
 historyService:
   host: https://localhost:9990
+
+db-service:
+  host: https://localhost:9999
 
 jarFilePath: C:\Users\VKaptur\Downloads\spark-transformations-0.1-jar-with-dependencies.jar
 

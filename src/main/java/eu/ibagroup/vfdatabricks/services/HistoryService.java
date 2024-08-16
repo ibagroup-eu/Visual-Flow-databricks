@@ -46,17 +46,17 @@ public class HistoryService {
     private final RestTemplate restTemplate;
     private final ApplicationConfigurationProperties appProperties;
     private final PipelineService pipelineService;
-    private final DatabricksJobService databricksJobService;
+    private final DatabricksAPIService databricksAPIService;
 
 
     public HistoryService(@Qualifier("authRestTemplate") RestTemplate restTemplate,
                           ApplicationConfigurationProperties appProperties,
                           PipelineService pipelineService,
-                          DatabricksJobService databricksJobService) {
+                          DatabricksAPIService databricksAPIService) {
         this.restTemplate = restTemplate;
         this.appProperties = appProperties;
         this.pipelineService = pipelineService;
-        this.databricksJobService = databricksJobService;
+        this.databricksAPIService = databricksAPIService;
     }
 
     public List<PipelineHistoryResponseDto> getPipelineHistory(String pipelineId) {
@@ -72,12 +72,12 @@ public class HistoryService {
     public List<JobLogDto> getPipelineLogs(String projectId, String pipeLineId, String jobName) {
         List<JobLogDto> jobLogDtos = new ArrayList<>();
         PipelineDto pipelineDto = pipelineService.getById(projectId, pipeLineId);
-        DatabricksJobClusterDto databricksJobClusterDto = databricksJobService.getClusterInfo(projectId,
+        DatabricksJobClusterDto databricksJobClusterDto = databricksAPIService.getClusterInfo(projectId,
                 pipelineDto.getRunId());
         databricksJobClusterDto.getTasks().stream().filter(job -> job.getJobName().equals(jobName)).findFirst()
                 .ifPresent((DatabricksJobClusterDto.Task task) -> {
                     try {
-                        DatabricksJobLogDto databricksJobLogDto = databricksJobService.getJobLogs(projectId,
+                        DatabricksJobLogDto databricksJobLogDto = databricksAPIService.getJobLogs(projectId,
                                 task.getClusterInstance().getClusterId());
                         jobLogDtos.addAll(getParsedDBLogs(decodeFromBase64(databricksJobLogDto.getData())));
                     } catch (RuntimeException e) {

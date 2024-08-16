@@ -67,7 +67,7 @@ public class PipelineService {
     private final RestTemplate restTemplate;
     private final ApplicationConfigurationProperties appProperties;
     private final MapperService mapperService;
-    private final DatabricksJobService databricksApiService;
+    private final DatabricksAPIService databricksApiService;
     private final AsyncJobCheckService asyncJobCheckService;
     private final JobService jobService;
     private final CronCheckService cronCheckService;
@@ -77,9 +77,10 @@ public class PipelineService {
                            ApplicationConfigurationProperties appProperties,
                            MapperService mapperService,
                            JobService jobService,
-                           DatabricksJobService databricksApiService,
+                           DatabricksAPIService databricksApiService,
                            AsyncJobCheckService asyncJobCheckService,
-                           CronCheckService cronCheckService, SchedulerService schedulerService) {
+                           CronCheckService cronCheckService,
+                           SchedulerService schedulerService) {
         this.restTemplate = restTemplate;
         this.appProperties = appProperties;
         this.mapperService = mapperService;

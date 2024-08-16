@@ -17,24 +17,23 @@
  * limitations under the License.
  */
 
-package eu.ibagroup.vfdatabricks.dto;
+package eu.ibagroup.vfdatabricks.validators;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 
-import java.util.Set;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Getter
-@ToString
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class ParameterValue {
-    String text;
-    Set<String> conUsages;
-    Set<String> jobUsages;
-    Set<String> pipUsages;
+@Constraint(validatedBy = DatabricksAuthenticationValidator.class)
+@Target({ ElementType.TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ValidDatabricksAuthentication {
+    String message() default "Invalid Databricks Authentication";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
 }

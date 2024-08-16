@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package eu.ibagroup.vfdatabricks.dto;
+package eu.ibagroup.vfdatabricks.dto.parameters;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

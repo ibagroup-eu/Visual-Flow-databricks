@@ -19,16 +19,27 @@
 
 package eu.ibagroup.vfdatabricks.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
-import java.util.List;
-
-@Builder
-@Getter
+/**
+ * Single DatabricksOAuthResponseDto DTO class.
+ * Used to receive DatabricksOAuth token.
+ */
 @Data
-public class ParameterOverviewDto {
-    boolean editable;
-    List<ParameterDto> params;
+@Builder(toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class DatabricksOAuthResponseDto {
+    @JsonProperty("access_token")
+    private String accessToken;
+    @JsonProperty("token_type")
+    private String tokenType;
+    @JsonProperty("expires_in")
+    private int expiresIn;
 }

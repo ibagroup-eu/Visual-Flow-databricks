@@ -1,6 +1,7 @@
 package eu.ibagroup.vfdatabricks.controllers;
 
 import eu.ibagroup.vfdatabricks.model.auth.UserInfo;
+import eu.ibagroup.vfdatabricks.services.DatabricksAPIService;
 import eu.ibagroup.vfdatabricks.services.UtilsService;
 import eu.ibagroup.vfdatabricks.services.auth.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,14 +21,14 @@ import static org.mockito.Mockito.when;
 public class UtilControllerTest {
 
     @Mock
-    private UtilsService utilsService;
+    private DatabricksAPIService databricksAPIService;
     @Mock
     private AuthenticationService authenticationServiceMock;
     private UtilController utilController;
 
     @BeforeEach
     void setUp() {
-        utilController = new UtilController(utilsService, authenticationServiceMock);
+        utilController = new UtilController(databricksAPIService, authenticationServiceMock);
         UserInfo expected = new UserInfo();
         expected.setName("name");
         expected.setId("id");
@@ -38,10 +39,10 @@ public class UtilControllerTest {
 
     @Test
     void testGetClusterConfigFields() {
-        when(utilsService.getDatabricksClusterConfigFields("projectId")).thenReturn(Map.of());
+        when(databricksAPIService.getDatabricksClusterConfigFields("projectId")).thenReturn(Map.of());
 
         assertEquals(Map.of(), utilController.getClusterConfigFields("projectId"));
 
-        verify(utilsService).getDatabricksClusterConfigFields(anyString());
+        verify(databricksAPIService).getDatabricksClusterConfigFields(anyString());
     }
 }

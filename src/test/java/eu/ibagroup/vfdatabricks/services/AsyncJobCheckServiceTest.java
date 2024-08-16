@@ -26,7 +26,7 @@ public class AsyncJobCheckServiceTest {
     private static final String PROJECT_ID = "vf-project-name";
 
     @Mock
-    private DatabricksJobService databricksApiService;
+    private DatabricksAPIService databricksApiService;
     @Mock
     private MapperService mapperService;
     @InjectMocks

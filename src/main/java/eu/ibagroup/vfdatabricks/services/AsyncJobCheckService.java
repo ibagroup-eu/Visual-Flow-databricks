@@ -36,7 +36,7 @@ import static eu.ibagroup.vfdatabricks.services.UtilsService.toFormattedString;
 @Service
 @RequiredArgsConstructor
 public class AsyncJobCheckService {
-    private final DatabricksJobService databricksApiService;
+    private final DatabricksAPIService databricksApiService;
     private final MapperService mapperService;
 
     @Async

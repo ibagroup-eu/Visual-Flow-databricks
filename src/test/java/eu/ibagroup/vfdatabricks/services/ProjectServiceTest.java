@@ -2,10 +2,7 @@ package eu.ibagroup.vfdatabricks.services;
 
 import eu.ibagroup.vfdatabricks.config.ApplicationConfigurationProperties;
 import eu.ibagroup.vfdatabricks.dto.jobs.databricks.DataBricksSecretScopeDto;
-import eu.ibagroup.vfdatabricks.dto.projects.ProjectOverviewDto;
-import eu.ibagroup.vfdatabricks.dto.projects.ProjectOverviewListDto;
-import eu.ibagroup.vfdatabricks.dto.projects.ProjectRequestDto;
-import eu.ibagroup.vfdatabricks.dto.projects.ProjectResponseDto;
+import eu.ibagroup.vfdatabricks.dto.projects.*;
 import io.fabric8.kubernetes.api.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +38,7 @@ public class ProjectServiceTest {
     private static final String PROJECT_ID = "vf-project-name";
     private static final String HOST_VALUE = "aG9zdA==";
     private static final String TOKEN_VALUE = "dG9rZW4=";
+    private static final String AUTH_VALUE = "UEFU";
     private static final String PATH_TO_FILE_VALUE = "cGF0aFRvRmlsZQ==";
     private static final String CLOUD_VALUE = "Y2xvdWQ=";
     @Mock
@@ -51,12 +49,15 @@ public class ProjectServiceTest {
     private RestTemplate restTemplate;
     @Mock
     AsyncDeleteProjectDataService asyncDeleteProjectDataService;
+    @Mock
+    private DatabricksAPIService databricksAPIService;
     @Autowired
     private ApplicationConfigurationProperties appProperties;
     private ProjectService projectService;
     private final Secret secret = new SecretBuilder()
             .addToData(HOST, HOST_VALUE)
             .addToData(TOKEN, TOKEN_VALUE)
+            .addToData(AUTHENTICATION_TYPE, AUTH_VALUE)
             .addToData(PATH_TO_FILE, PATH_TO_FILE_VALUE)
             .addToData(CLOUD, CLOUD_VALUE)
             .editOrNewMetadata()
@@ -70,7 +71,7 @@ public class ProjectServiceTest {
 
     @BeforeEach
     void setUp() {
-        projectService = new ProjectService(appProperties, kubernetesService, restTemplate, asyncDeleteProjectDataService, asyncUploadJarService);
+        projectService = new ProjectService(appProperties, kubernetesService, asyncDeleteProjectDataService, asyncUploadJarService, databricksAPIService);
     }
 
     @Test
@@ -80,8 +81,7 @@ public class ProjectServiceTest {
             filesMockedStatic.when(() -> Files.readAllBytes(Path.of(anyString()))).thenReturn(fileBytes);
             ProjectRequestDto projectDto =
                     ProjectRequestDto.builder().jarHash("temp").isUpdating("true").name(PROJECT_NAME).description(DESCRIPTION).host(HOST_VALUE)
-                            .token(TOKEN_VALUE).pathToFile(PATH_TO_FILE_VALUE).cloud(CLOUD_VALUE).build();
-            when(kubernetesService.getSecret(anyString())).thenReturn(secret);
+                            .authentication(DatabricksAuthentication.builder().authenticationType(DatabricksAuthentication.AuthenticationType.PAT).token(TOKEN_VALUE).build()).pathToFile(PATH_TO_FILE_VALUE).cloud(CLOUD_VALUE).build();
             when(asyncUploadJarService.uploadJarFileToDatabricks(anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
             projectService.create(projectDto);
 
@@ -96,8 +96,7 @@ public class ProjectServiceTest {
             filesMockedStatic.when(() -> Files.readAllBytes(Path.of(anyString()))).thenReturn(fileBytes);
             ProjectRequestDto projectDto =
                     ProjectRequestDto.builder().jarHash("temp").isUpdating("true").name(PROJECT_NAME).description(DESCRIPTION).host(HOST_VALUE)
-                            .token(TOKEN_VALUE).pathToFile(PATH_TO_FILE_VALUE).cloud(CLOUD_VALUE).build();
-            when(kubernetesService.getSecret(anyString())).thenReturn(secret);
+                            .authentication(DatabricksAuthentication.builder().authenticationType(DatabricksAuthentication.AuthenticationType.PAT).token(TOKEN_VALUE).build()).pathToFile(PATH_TO_FILE_VALUE).cloud(CLOUD_VALUE).build();
             when(asyncUploadJarService.uploadJarFileToDatabricks(anyString(), anyString())).thenReturn(CompletableFuture.supplyAsync(() -> {
                 throw new RuntimeException("Something went wrong");
             }));
@@ -116,7 +115,7 @@ public class ProjectServiceTest {
         assertEquals(ProjectResponseDto.builder()
                 .id(PROJECT_ID)
                 .host(HOST)
-                .token(TOKEN)
+                .authentication(DatabricksAuthentication.builder().authenticationType(DatabricksAuthentication.AuthenticationType.PAT).token(TOKEN).build())
                 .description(DESCRIPTION)
                 .name(PROJECT_NAME)
                 .pathToFile(PATH_TO_FILE)
@@ -145,7 +144,7 @@ public class ProjectServiceTest {
                         .cloud(CLOUD)
                         .jarHash("8eecc294d3ecdfbaaba74647cda2813f")
                         .isUpdating("true")
-                        .token("token")
+                        .authentication(DatabricksAuthentication.builder().authenticationType(DatabricksAuthentication.AuthenticationType.PAT).token(TOKEN).build())
                         .isLocked(false)
                         .build()))
                 .editable(true)
@@ -165,7 +164,7 @@ public class ProjectServiceTest {
                             .description(DESCRIPTION)
                             .name(PROJECT_NAME)
                             .host(HOST)
-                            .token(TOKEN)
+                            .authentication(DatabricksAuthentication.builder().authenticationType(DatabricksAuthentication.AuthenticationType.PAT).token(TOKEN_VALUE).build())
                             .pathToFile(PATH_TO_FILE)
                             .cloud(CLOUD)
                             .isUpdating("true")
@@ -177,7 +176,6 @@ public class ProjectServiceTest {
 
     @Test
     void testDelete() {
-        when(kubernetesService.getSecret(PROJECT_ID)).thenReturn(secret);
         projectService.delete(PROJECT_ID);
         verify(kubernetesService).deleteSecret(PROJECT_ID);
     }

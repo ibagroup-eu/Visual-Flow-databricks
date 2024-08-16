@@ -17,22 +17,40 @@
  * limitations under the License.
  */
 
-package eu.ibagroup.vfdatabricks.model;
+package eu.ibagroup.vfdatabricks.dto.projects;
 
-import eu.ibagroup.vfdatabricks.dto.parameters.ParameterValue;
-import lombok.AllArgsConstructor;
+import eu.ibagroup.vfdatabricks.validators.ValidDatabricksAuthentication;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
+import static eu.ibagroup.vfdatabricks.dto.Constants.MAX_TOKEN_LENGTH;
+
+/**
+ * Databricks' authentication data.
+ */
 @Getter
+@Setter
+@Builder(toBuilder = true)
+@EqualsAndHashCode
 @ToString
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class Parameter {
-    private String key;
-    private boolean secret;
-    private ParameterValue value;
+@ValidDatabricksAuthentication
+public class DatabricksAuthentication {
+    @Size(max = MAX_TOKEN_LENGTH)
+    private String token;
+    private String clientId;
+    private String secret;
+    @NotNull
+    private AuthenticationType authenticationType;
+
+
+    public enum AuthenticationType {
+        PAT,
+        OAUTH
+    }
+
 }

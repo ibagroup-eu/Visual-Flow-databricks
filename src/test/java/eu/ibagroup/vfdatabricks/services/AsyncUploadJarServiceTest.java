@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 public class AsyncUploadJarServiceTest {
 
     @Mock
-    private DatabricksJobService databricksApiService;
+    private DatabricksAPIService databricksApiService;
 
     @Mock
     private LoadingCache<String, byte[]> jarFileCache;

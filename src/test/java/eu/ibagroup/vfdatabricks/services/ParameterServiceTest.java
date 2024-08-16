@@ -2,8 +2,8 @@ package eu.ibagroup.vfdatabricks.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.ibagroup.vfdatabricks.dto.ParameterDto;
-import eu.ibagroup.vfdatabricks.dto.ParameterValue;
+import eu.ibagroup.vfdatabricks.dto.parameters.ParameterDto;
+import eu.ibagroup.vfdatabricks.dto.parameters.ParameterValue;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,34 +37,21 @@ public class ParameterServiceTest {
     private HashOperations hashOperations;
 
     @Mock
-    private RestTemplate restTemplate;
+    private DatabricksAPIService databricksAPIService;
 
     private ParameterService parameterService;
 
-    @Mock
-    private KubernetesService kubernetesService;
-    private static final String PROJECT_NAME = "project name";
     private static final String PROJECT_ID = "vf-project-name";
-    private static final String HOST_VALUE = "aG9zdA==";
-    private static final String TOKEN_VALUE = "dG9rZW4=";
-    private final Secret secret = new SecretBuilder()
-            .addToData(HOST, HOST_VALUE)
-            .addToData(TOKEN, TOKEN_VALUE)
-            .editOrNewMetadata()
-            .withName(PROJECT_ID)
-            .addToAnnotations(NAME, PROJECT_NAME)
-            .addToAnnotations(DESCRIPTION, DESCRIPTION)
-            .endMetadata()
-            .build();
+
+
     @BeforeEach
     void setUp() {
-        parameterService = new ParameterService(redisTemplate, new ObjectMapper(), restTemplate, kubernetesService);
+        parameterService = new ParameterService(redisTemplate, new ObjectMapper(), databricksAPIService);
     }
 
     @Test
     void testCreate() throws JsonProcessingException {
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(kubernetesService.getSecret(PROJECT_ID)).thenReturn(secret);
         doNothing().when(hashOperations).put(anyString(), anyString(), any());
         parameterService.create("vf-project-name", "key", ParameterDto.builder()
                                                                      .key("key")
@@ -77,7 +64,6 @@ public class ParameterServiceTest {
     @Test
     void testUpdate() throws JsonProcessingException {
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(kubernetesService.getSecret(PROJECT_ID)).thenReturn(secret);
         when(hashOperations.delete(any(), any())).thenReturn(1L);
         doNothing().when(hashOperations).put(anyString(), anyString(), any());
         parameterService.update("vf-project-name", "key", ParameterDto.builder()
@@ -111,7 +97,6 @@ public class ParameterServiceTest {
     @Test
     void testDelete() {
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(kubernetesService.getSecret(PROJECT_ID)).thenReturn(secret);
         when(hashOperations.delete(any(), any())).thenReturn(1L);
         parameterService.delete(PROJECT_ID, "key");
         verify(hashOperations).delete(any(), any());

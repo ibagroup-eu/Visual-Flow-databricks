@@ -16,23 +16,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package eu.ibagroup.vfdatabricks.dto.databases;
 
-package eu.ibagroup.vfdatabricks.model;
-
-import eu.ibagroup.vfdatabricks.dto.parameters.ParameterValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
-@Getter
-@ToString
+/**
+ * Data Transfer Object Class, contains return value for ping.
+ * Used mainly when working with DB-service to get ping status of some connection.
+ */
+@Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class Parameter {
-    private String key;
-    private boolean secret;
-    private ParameterValue value;
+public class PingStatusDto {
+    private boolean status;
+    private String message;
 }

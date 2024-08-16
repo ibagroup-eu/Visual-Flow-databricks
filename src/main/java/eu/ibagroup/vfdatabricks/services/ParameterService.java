@@ -21,25 +21,19 @@ package eu.ibagroup.vfdatabricks.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.ibagroup.vfdatabricks.dto.ParameterDto;
-import eu.ibagroup.vfdatabricks.dto.ParameterOverviewDto;
-import eu.ibagroup.vfdatabricks.dto.jobs.databricks.DataBricksSecretDeleteDto;
-import eu.ibagroup.vfdatabricks.dto.jobs.databricks.DataBricksSecretPutDto;
+import eu.ibagroup.vfdatabricks.dto.parameters.ParameterDto;
+import eu.ibagroup.vfdatabricks.dto.parameters.ParameterOverviewDto;
 import eu.ibagroup.vfdatabricks.model.Parameter;
-import io.fabric8.kubernetes.api.model.Secret;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static eu.ibagroup.vfdatabricks.dto.Constants.*;
-import static eu.ibagroup.vfdatabricks.services.UtilsService.*;
+import static eu.ibagroup.vfdatabricks.dto.Constants.PARAMETER_KEY_PREFIX;
+import static eu.ibagroup.vfdatabricks.dto.Constants.PROJECT_KEY_PREFIX;
 
 @Slf4j
 @Service
@@ -47,20 +41,13 @@ public class ParameterService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
-    private final RestTemplate databricksRestTemplate;
-    private final KubernetesService kubernetesService;
+    private final DatabricksAPIService databricksAPIService;
     public ParameterService(@Qualifier("redisTemplate") RedisTemplate<String, String> redisTemplate,
                             ObjectMapper objectMapper,
-                            @Qualifier("databricksRestTemplate") RestTemplate databricksRestTemplate,
-                            KubernetesService kubernetesService) {
+                            DatabricksAPIService databricksAPIService) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
-        this.databricksRestTemplate = databricksRestTemplate;
-        this.kubernetesService = kubernetesService;
-    }
-
-    private String wrapValue(String value) {
-        return String.format("{\"text\":\"%s\"}", value);
+        this.databricksAPIService = databricksAPIService;
     }
 
     public void create(String projectId, String paramId, ParameterDto parameterDto)
@@ -74,21 +61,7 @@ public class ParameterService {
         String parameterKey = folderKey + PARAMETER_KEY_PREFIX + paramId;
         String parameterJson = objectMapper.writeValueAsString(parameter);
         redisTemplate.opsForHash().put(folderKey, parameterKey, parameterJson);
-        Secret project = kubernetesService.getSecret(projectId);
-        HttpEntity<DataBricksSecretPutDto> databricksEntity = makeHttpEntity(
-                decodeFromBase64(project.getData().get(TOKEN)), DataBricksSecretPutDto.builder()
-                        .scope(projectId)
-                        .key(parameter.getKey())
-                        .stringValue(wrapValue(encodeToBase64(parameter.getValue().getText())))
-                        .build());
-        databricksRestTemplate.exchange(
-                String.format("%s/%s/put",
-                        decodeFromBase64(project.getData().get(HOST)),
-                        DATABRICKS_SECRET_API),
-                HttpMethod.POST,
-                databricksEntity,
-                Object.class
-        );
+        databricksAPIService.addSecret(projectId, parameter);
     }
 
     public void update(String projectId, String paramId, ParameterDto parameterDto)
@@ -136,21 +109,7 @@ public class ParameterService {
         String folderKey = PROJECT_KEY_PREFIX + projectId;
         String jobKey = folderKey + PARAMETER_KEY_PREFIX + parameterId;
         redisTemplate.opsForHash().delete(folderKey, jobKey);
-        Secret project = kubernetesService.getSecret(projectId);
-        HttpEntity<DataBricksSecretDeleteDto> databricksEntity = makeHttpEntity(
-                decodeFromBase64(project.getData().get(TOKEN)), DataBricksSecretDeleteDto.builder()
-                        .scope(projectId)
-                        .key(parameterId)
-                        .build());
-        databricksRestTemplate.exchange(
-                String.format("%s/%s/delete",
-                        decodeFromBase64(project.getData().get(HOST)),
-                        DATABRICKS_SECRET_API),
-                HttpMethod.POST,
-                databricksEntity,
-                Object.class
-        );
-
+        databricksAPIService.deleteSecret(projectId, parameterId);
     }
 
     private Parameter jsonToParameter(String jobJson) throws JsonProcessingException {

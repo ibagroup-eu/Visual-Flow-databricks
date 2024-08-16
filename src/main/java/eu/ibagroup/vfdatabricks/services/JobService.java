@@ -64,14 +64,14 @@ import static eu.ibagroup.vfdatabricks.services.UtilsService.*;
 public class JobService {
     protected static final long TIMEOUT = 3L;
     private final MapperService mapperService;
-    private final DatabricksJobService databricksApiService;
+    private final DatabricksAPIService databricksApiService;
     private final ApplicationConfigurationProperties appProperties;
     private final RestTemplate restTemplate;
     private final AsyncJobCheckService asyncJobCheckService;
 
     public JobService(
             MapperService mapperService,
-            DatabricksJobService databricksApiService,
+            DatabricksAPIService databricksApiService,
             ApplicationConfigurationProperties appProperties,
             @Qualifier("authRestTemplate") RestTemplate restTemplate,
             AsyncJobCheckService asyncJobCheckService) {

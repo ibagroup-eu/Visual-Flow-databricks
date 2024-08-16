@@ -17,22 +17,22 @@
  * limitations under the License.
  */
 
-package eu.ibagroup.vfdatabricks.model;
+package eu.ibagroup.vfdatabricks.dto.parameters;
 
-import eu.ibagroup.vfdatabricks.dto.parameters.ParameterValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
+import java.util.List;
+
+@Builder
 @Getter
-@ToString
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class Parameter {
-    private String key;
-    private boolean secret;
-    private ParameterValue value;
+public class ParameterOverviewDto {
+    private boolean editable;
+    private List<ParameterDto> params;
 }

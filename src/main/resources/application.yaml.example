@@ -67,12 +67,17 @@ databricks:
     version: 0.1
   retry:
     codes: 429, 500, 503                          # list of http errors codes for retrying
+    intervals: 2                                  # intervals between retry in seconds
+    upTo: 10                                      # upto retry requests in seconds
 
 jobStorage:
   host: https://localhost:8090                    # The connection host for job storage service
 
 historyService:
   host: https://localhost:8099                    # The connection host for history service
+
+db-service:
+  host: ${DB_SERVICE_HOST}                        # Database Service host. Use HTTP protocol.
 
 spring:
   datasource:         # PostgreSQL DB Connection:
@@ -100,3 +105,6 @@ spring:
             class: org.quartz.simpl.SimpleThreadPool
             threadCount: 4
             threadsInheritContextClassLoaderOfInitializingThread: true
+
+jarFilePath: C:\spark-transformations-0.1-jar-with-dependencies.jar      # Path to jar file
+jarHash: C:\spark-transformations-0.1-jar-with-dependencies.jar.md5      # Path to md5 hash file for jar

@@ -22,6 +22,7 @@ package eu.ibagroup.vfdatabricks.config;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import eu.ibagroup.vfdatabricks.services.DatabricksAuthorizationService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,20 +31,33 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
-import static eu.ibagroup.vfdatabricks.dto.Constants.CACHE_EXPIRE_MINUTES;
+import static eu.ibagroup.vfdatabricks.dto.Constants.JAR_FILE_CACHE_EXPIRE_MINUTES;
+import static eu.ibagroup.vfdatabricks.dto.Constants.TOKEN_CACHE_EXPIRE_MINUTES;
 
 @Configuration
 public class CacheConfig {
 
-    @Bean
+    @Bean("jarFileCache")
     public LoadingCache<String, byte[]> jarFileCache(ApplicationConfigurationProperties appProperties) {
         return CacheBuilder.newBuilder()
-                .expireAfterAccess(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+                .expireAfterAccess(JAR_FILE_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
                 .maximumSize(1)
                 .build(new CacheLoader<>() {
                     @Override
                     public byte[] load(String key) throws IOException {
                         return Files.readAllBytes(Path.of(appProperties.getJarFilePath()));
+                    }
+                });
+    }
+
+    @Bean("tokenCache")
+    public LoadingCache<String, String> tokenCache(DatabricksAuthorizationService databricksAuthorizationService) {
+        return CacheBuilder.newBuilder()
+                .expireAfterWrite(TOKEN_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+                .build(new CacheLoader<String, String>() {
+                    @Override
+                    public String load(String projectId) {
+                        return databricksAuthorizationService.getOAuthToken(projectId);
                     }
                 });
     }

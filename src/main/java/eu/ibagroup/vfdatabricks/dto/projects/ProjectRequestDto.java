@@ -21,6 +21,7 @@ package eu.ibagroup.vfdatabricks.dto.projects;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -50,9 +51,8 @@ public class ProjectRequestDto {
     private String description;
     @Pattern(regexp = HOST_PATTERN)
     private String host;
-    @NotNull
-    @Size(max = MAX_TOKEN_LENGTH)
-    private String token;
+    @Valid
+    private DatabricksAuthentication authentication;
     private String pathToFile;
     private String cloud;
     private String isUpdating;
@@ -68,10 +68,19 @@ public class ProjectRequestDto {
         if (jarHash == null) {
             jarHash = "temp";
         }
+        String token = switch (authentication.getAuthenticationType()) {
+            case PAT -> authentication.getToken();
+            case OAUTH -> getAuthentication().getClientId() + ":" + authentication.getSecret();
+        };
 
         return new SecretBuilder()
-                .addToStringData(Map.of(HOST, host, TOKEN, token, PATH_TO_FILE, pathToFile, CLOUD, cloud, UPDATING,
-                        isUpdating, HASH, jarHash))
+                .addToStringData(Map.of(HOST, host,
+                        TOKEN, token,
+                        AUTHENTICATION_TYPE, authentication.getAuthenticationType().name(),
+                        PATH_TO_FILE, pathToFile,
+                        CLOUD, cloud,
+                        UPDATING, isUpdating,
+                        HASH, jarHash))
                 .withNewMetadata()
                 .withAnnotations(Map.of(NAME, name, DESCRIPTION, description))
                 .endMetadata()

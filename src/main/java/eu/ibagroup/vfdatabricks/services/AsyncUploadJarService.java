@@ -21,6 +21,7 @@ package eu.ibagroup.vfdatabricks.services;
 
 import com.google.common.cache.LoadingCache;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -32,11 +33,11 @@ import static eu.ibagroup.vfdatabricks.dto.Constants.JAR_FILE_NAME;
 @Slf4j
 @Service
 public class AsyncUploadJarService {
-    private final DatabricksJobService databricksApiService;
+    private final DatabricksAPIService databricksApiService;
     private final LoadingCache<String, byte[]> jarFileCache;
 
-    public AsyncUploadJarService(DatabricksJobService databricksApiService,
-                                 LoadingCache<String, byte[]> jarFileCache) {
+    public AsyncUploadJarService(DatabricksAPIService databricksApiService,
+                                 @Qualifier("jarFileCache") LoadingCache<String, byte[]> jarFileCache) {
         this.databricksApiService = databricksApiService;
         this.jarFileCache = jarFileCache;
     }

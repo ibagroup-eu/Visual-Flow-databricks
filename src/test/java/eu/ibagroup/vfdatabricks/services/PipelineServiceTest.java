@@ -36,7 +36,7 @@ class PipelineServiceTest {
     @Mock
     MapperService mapperService;
     @Mock
-    DatabricksJobService databricksApiService;
+    DatabricksAPIService databricksApiService;
     @Mock
     private RestTemplate restTemplate;
     @Mock(answer = RETURNS_DEEP_STUBS)

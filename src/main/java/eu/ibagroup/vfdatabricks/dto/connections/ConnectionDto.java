@@ -19,9 +19,11 @@
 
 package eu.ibagroup.vfdatabricks.dto.connections;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -35,6 +37,8 @@ import java.util.Map;
 @Getter
 @Setter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
 public class ConnectionDto {
     private String key;
     private Map<String, String> value;

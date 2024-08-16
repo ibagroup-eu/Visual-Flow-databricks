@@ -20,8 +20,8 @@
 package eu.ibagroup.vfdatabricks.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import eu.ibagroup.vfdatabricks.dto.ParameterDto;
-import eu.ibagroup.vfdatabricks.dto.ParameterOverviewDto;
+import eu.ibagroup.vfdatabricks.dto.parameters.ParameterDto;
+import eu.ibagroup.vfdatabricks.dto.parameters.ParameterOverviewDto;
 import eu.ibagroup.vfdatabricks.services.ParameterService;
 import eu.ibagroup.vfdatabricks.services.auth.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;

@@ -19,7 +19,7 @@
 
 package eu.ibagroup.vfdatabricks.controllers;
 
-import eu.ibagroup.vfdatabricks.services.UtilsService;
+import eu.ibagroup.vfdatabricks.services.DatabricksAPIService;
 import eu.ibagroup.vfdatabricks.services.auth.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ import java.util.Map;
 @RequestMapping("api/util")
 public class UtilController {
 
-    private final UtilsService utilsService;
+    private final DatabricksAPIService databricksAPIService;
     private final AuthenticationService authenticationService;
 
     /**
@@ -51,6 +51,6 @@ public class UtilController {
                 "{} - Receiving databricks job cluster config fields",
                 AuthenticationService.getFormattedUserInfo(authenticationService.getUserInfo())
         );
-        return utilsService.getDatabricksClusterConfigFields(projectId);
+        return databricksAPIService.getDatabricksClusterConfigFields(projectId);
     }
 }
