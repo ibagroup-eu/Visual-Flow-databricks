@@ -24,8 +24,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Authentication service.
@@ -52,7 +55,13 @@ public class AuthenticationService {
      * @param userInfo user info.
      */
     public void setUserInfo(UserInfo userInfo) {
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userInfo, null);
+        Authentication authentication;
+        if (userInfo.isSuperuser()) {
+            authentication = new UsernamePasswordAuthenticationToken(userInfo, null,
+                    List.of(new SimpleGrantedAuthority("SUPERUSER")));
+        } else {
+            authentication = new UsernamePasswordAuthenticationToken(userInfo, null);
+        }
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 

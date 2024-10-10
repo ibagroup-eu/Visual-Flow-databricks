@@ -88,7 +88,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 token = token.replace(BEARER_PREFIX, "");
                 UserInfo userInfo = oauthService.getUserInfoByToken(token);
                 userInfo.setSuperuser(superusers.contains(userInfo.getUsername()));
-                userInfo.setToken(token);
                 if (!userInfo.hasAllInformation()) {
                     throw new BadRequestException("User information doesn't contain all necessary data");
                 }

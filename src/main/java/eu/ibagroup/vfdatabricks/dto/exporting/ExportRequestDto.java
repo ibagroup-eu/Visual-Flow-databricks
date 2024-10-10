@@ -76,7 +76,7 @@ public class ExportRequestDto {
     public static class PipelineRequest {
         @Schema(description = "Id of the pipeline", implementation = UUID.class)
         private String pipelineId;
-        @Schema(description = "Whether to include pipeline jobs into export")
-        private boolean withRelatedJobs;
+        @Schema(description = "Whether to include pipeline jobs/pipelines into export")
+        private boolean withRelatedEntities;
     }
 }

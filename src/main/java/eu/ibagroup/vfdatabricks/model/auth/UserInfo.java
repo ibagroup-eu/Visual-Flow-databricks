@@ -20,6 +20,7 @@
 package eu.ibagroup.vfdatabricks.model.auth;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,6 +33,7 @@ import org.apache.commons.lang3.ObjectUtils;
 @NoArgsConstructor
 @Getter
 @Setter
+@Builder
 @EqualsAndHashCode
 @AllArgsConstructor
 public final class UserInfo {
@@ -40,7 +42,6 @@ public final class UserInfo {
     private String username;
     private String email;
     private boolean superuser;
-    private String token;
 
     /**
      * Identifies if all required fields are populated

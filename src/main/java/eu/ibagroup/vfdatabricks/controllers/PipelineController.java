@@ -43,9 +43,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Manage requests for pipelines.
@@ -161,17 +163,19 @@ public class PipelineController {
      * Get all pipelines in project.
      *
      * @param projectId project id
+     * @param names     pipelines with such names must be getting
      * @return ResponseEntity with jobs graphs
      */
     @Operation(summary = "Get all pipelines in a project", description = "Get information about all pipelines in" +
             " a project")
     @GetMapping("{projectId}/pipeline")
-    public PipelineOverviewListDto getAll(@PathVariable String projectId) {
+    public PipelineOverviewListDto getAll(@PathVariable String projectId,
+                                          @RequestParam(required = false) List<String> names) {
         LOGGER.info(
                 "{} - Receiving all pipelines in project '{}'",
                 AuthenticationService.getFormattedUserInfo(authenticationService.getUserInfo()),
                 projectId);
-        return pipelineService.getAll(projectId);
+        return pipelineService.getAll(projectId, names);
     }
 
     /**

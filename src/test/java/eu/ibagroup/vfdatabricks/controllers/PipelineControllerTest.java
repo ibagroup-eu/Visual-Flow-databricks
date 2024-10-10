@@ -95,12 +95,12 @@ class PipelineControllerTest {
     @Test
     void shouldGetAllPipelinesSuccessfully() {
         PipelineOverviewListDto pipelineOverviewListDto =  PipelineOverviewListDto.builder().build();
-        when(pipelineService.getAll(anyString())).thenReturn(pipelineOverviewListDto);
+        when(pipelineService.getAll(anyString(), isNull())).thenReturn(pipelineOverviewListDto);
 
-        PipelineOverviewListDto response = controller.getAll("projectId");
+        PipelineOverviewListDto response = controller.getAll("projectId", null);
 
         assertEquals(pipelineOverviewListDto, response);
-        verify(pipelineService).getAll(anyString());
+        verify(pipelineService).getAll(anyString(), isNull());
     }
 
     @Test

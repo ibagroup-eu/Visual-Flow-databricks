@@ -39,6 +39,7 @@ public class CronCheckService {
         if (exists) {
             CronPipelineDto cron = schedulerService.getCron(projectId, pipelineOverviewDto.getId());
             pipelineOverviewDto.setCron(true);
+            pipelineOverviewDto.setCronExpression(cron.getSchedule());
             pipelineOverviewDto.setCronSuspend(cron.isSuspend());
         }
     }

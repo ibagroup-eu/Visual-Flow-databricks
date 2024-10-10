@@ -34,9 +34,12 @@ import eu.ibagroup.vfdatabricks.dto.pipelines.PipelineOverviewDto;
 import eu.ibagroup.vfdatabricks.dto.pipelines.PipelineOverviewListDto;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -62,6 +65,7 @@ import static eu.ibagroup.vfdatabricks.services.JobService.TIMEOUT;
 @Slf4j
 public class PipelineService {
     private static final String BASE_URL = "%s/%s/%s/%s/pipeline";
+    private static final String GET_ALL_URL = BASE_URL + "?names=%s";
     private static final String URL_STRING_FORMAT = BASE_URL + "/%s";
 
     private final RestTemplate restTemplate;
@@ -184,14 +188,20 @@ public class PipelineService {
 
     }
 
-
-    public PipelineOverviewListDto getAll(String projectId) {
+    public PipelineOverviewListDto getAll(String projectId, @Nullable Collection<String> names) {
+        String url;
+        if (CollectionUtils.isEmpty(names)) {
+            url = BASE_URL;
+        } else {
+            url = GET_ALL_URL;
+        }
         ResponseEntity<PipelineOverviewListDto> response = restTemplate.getForEntity(
-                String.format(BASE_URL,
+                String.format(url,
                         appProperties.getJobStorage().getHost(),
                         CONTEXT_PATH,
                         JOB_STORAGE_API,
-                        projectId),
+                        projectId,
+                        Strings.join(names, ',')),
                 PipelineOverviewListDto.class
         );
         PipelineOverviewListDto body = Objects.requireNonNull(response.getBody());

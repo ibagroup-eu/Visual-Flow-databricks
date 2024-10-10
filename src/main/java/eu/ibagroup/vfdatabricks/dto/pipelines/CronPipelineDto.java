@@ -41,4 +41,8 @@ public class CronPipelineDto {
     private String schedule;
     @Schema(description = "If true Workflow scheduling will not occur")
     private boolean suspend;
+
+    public CronPipelineDto(String schedule) {
+        this.schedule = schedule;
+    }
 }

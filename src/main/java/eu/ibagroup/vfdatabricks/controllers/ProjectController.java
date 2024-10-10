@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -60,6 +61,7 @@ public class ProjectController {
      * @return ResponseEntity with status code
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('SUPERUSER')")
     public ResponseEntity<String> create(@RequestBody @Valid final ProjectRequestDto projectDto) throws IOException {
         LOGGER.info(
                 "{} - Creating project",
@@ -81,6 +83,7 @@ public class ProjectController {
      * @return ResponseEntity with status code and project date (ProjectDto).
      */
     @GetMapping("/{projectId}")
+    @PreAuthorize("hasAuthority('SUPERUSER')")
     public ProjectResponseDto get(@PathVariable final String projectId) {
         LOGGER.info(
                 "{} - Receiving project '{}' ",
@@ -101,7 +104,12 @@ public class ProjectController {
                 "{} - Receiving list of projects",
                 AuthenticationService.getFormattedUserInfo(authenticationService.getUserInfo())
         );
-        return projectService.getAll();
+        ProjectOverviewListDto projectOverviewListDto = projectService.getAll();
+        if (!authenticationService.getUserInfo().isSuperuser()) {
+            projectOverviewListDto.setEditable(false);
+            projectOverviewListDto.getProjects().forEach(p -> p.setLocked(true));
+        }
+        return projectOverviewListDto;
     }
 
     /**
@@ -111,6 +119,7 @@ public class ProjectController {
      * @param projectDto new project params.
      */
     @PostMapping("/{projectId}")
+    @PreAuthorize("hasAuthority('SUPERUSER')")
     public void update(
             @PathVariable final String projectId, @RequestBody @Valid final ProjectRequestDto projectDto)
             throws IOException {
@@ -134,6 +143,7 @@ public class ProjectController {
      * @return ResponseEntity with 204 status code.
      */
     @DeleteMapping("/{projectId}")
+    @PreAuthorize("hasAuthority('SUPERUSER')")
     public ResponseEntity<Void> delete(@PathVariable final String projectId) {
         LOGGER.info(
                 "{} - Deleting project '{}'",

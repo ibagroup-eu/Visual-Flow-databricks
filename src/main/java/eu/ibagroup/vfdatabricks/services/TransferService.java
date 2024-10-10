@@ -23,10 +23,19 @@ import eu.ibagroup.vfdatabricks.dto.exporting.ExportRequestDto;
 import eu.ibagroup.vfdatabricks.dto.exporting.ExportResponseDto;
 import eu.ibagroup.vfdatabricks.dto.importing.ImportRequestDto;
 import eu.ibagroup.vfdatabricks.dto.importing.ImportResponseDto;
+import eu.ibagroup.vfdatabricks.dto.jobs.CommonDto;
+import eu.ibagroup.vfdatabricks.dto.pipelines.CronPipelineDto;
+import eu.ibagroup.vfdatabricks.dto.pipelines.PipelineOverviewDto;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static eu.ibagroup.vfdatabricks.dto.Constants.CONTEXT_PATH;
 import static eu.ibagroup.vfdatabricks.dto.Constants.JOB_STORAGE_API;
@@ -36,11 +45,19 @@ public class TransferService {
 
     private final RestTemplate restTemplate;
     private final ApplicationConfigurationProperties appProperties;
+    private final SchedulerService schedulerService;
+    private final PipelineService pipelineService;
+    private final CronCheckService cronCheckService;
 
     public TransferService(@Qualifier("authRestTemplate") RestTemplate restTemplate,
-                           ApplicationConfigurationProperties appProperties) {
+                           ApplicationConfigurationProperties appProperties,
+                           SchedulerService schedulerService, PipelineService pipelineService,
+                           CronCheckService cronCheckService) {
         this.restTemplate = restTemplate;
         this.appProperties = appProperties;
+        this.schedulerService = schedulerService;
+        this.pipelineService = pipelineService;
+        this.cronCheckService = cronCheckService;
     }
 
     /**
@@ -50,7 +67,7 @@ public class TransferService {
      * @return pipelines and jobs in json format
      */
     public ResponseEntity<ExportResponseDto> exporting(String projectId, ExportRequestDto exportRequestDto) {
-        return restTemplate.postForEntity(
+        ResponseEntity<ExportResponseDto> result = restTemplate.postForEntity(
                 String.format("%s/%s/%s/%s/exportResources",
                         appProperties.getJobStorage().getHost(),
                         CONTEXT_PATH,
@@ -59,17 +76,20 @@ public class TransferService {
                 exportRequestDto,
                 ExportResponseDto.class
         );
+        cronCheckService.checkAndUpdateCron(projectId, Objects.requireNonNull(result.getBody()).getPipelines());
+        return result;
     }
 
     /**
      * Import jobs and pipelines.
      * Nested jobs will be imported as well.
-     * @param projectId is project ID.
+     *
+     * @param projectId     is project ID.
      * @param importRequest is an object, contains information about imported jobs and pipelines.
      * @return importing results.
      */
     public ResponseEntity<ImportResponseDto> importing(String projectId, ImportRequestDto importRequest) {
-        return restTemplate.postForEntity(
+        ResponseEntity<ImportResponseDto> resultResponse = restTemplate.postForEntity(
                 String.format("%s/%s/%s/%s/importResources",
                         appProperties.getJobStorage().getHost(),
                         CONTEXT_PATH,
@@ -78,5 +98,30 @@ public class TransferService {
                 importRequest,
                 ImportResponseDto.class
         );
+        ImportResponseDto result = Objects.requireNonNull(resultResponse.getBody());
+        Map<String, String> pipelinesNamesWithCron = importRequest.getPipelines().stream()
+                .filter(pipeline -> !result.getNotImportedPipelines().contains(pipeline.getName()) &&
+                        pipeline.isCron() && StringUtils.isNotBlank(pipeline.getCronExpression()))
+                .collect(Collectors.toMap(CommonDto::getName, PipelineOverviewDto::getCronExpression,
+                        (p1, p2) -> p1));
+        if (MapUtils.isNotEmpty(pipelinesNamesWithCron)) {
+            pipelineService.getAll(projectId, pipelinesNamesWithCron.keySet()).getPipelines()
+                    .forEach((PipelineOverviewDto pipeline) ->
+                            schedulerService.exists(projectId, pipeline.getId())
+                                    .thenAccept((Boolean exists) -> {
+                                        if (exists) {
+                                            schedulerService.updateCron(projectId, pipeline.getId(),
+                                                    new CronPipelineDto(
+                                                            pipelinesNamesWithCron.get(pipeline.getName())
+                                                    ));
+                                        } else {
+                                            schedulerService.createCron(projectId, pipeline.getId(),
+                                                    new CronPipelineDto(
+                                                            pipelinesNamesWithCron.get(pipeline.getName())
+                                                    ));
+                                        }
+                                    }));
+        }
+        return resultResponse;
     }
 }

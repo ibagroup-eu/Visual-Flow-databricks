@@ -42,6 +42,8 @@ public class PipelineOverviewDto extends CommonDto {
     private double progress;
     @Schema(description = "Whether pipeline is represented by scheduled workflow")
     private boolean cron;
+    @Schema(description = "Scheduled workflow's cron expression")
+    private String cronExpression;
     @Schema(description = "If true Workflow scheduling will not occur")
     private boolean cronSuspend;
     @Schema(description = "Pipeline's list of tags")
